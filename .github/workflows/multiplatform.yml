@@ -1,6 +1,15 @@
 name: Multiplatform CI
 
-on: [push, pull_request]
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+
+# 取消同一分支的旧运行
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   test-jvm:
@@ -15,22 +24,24 @@ jobs:
         with:
           java-version: '11'
           distribution: 'temurin'
+          cache: 'gradle'
 
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
 
       - name: Setup Gradle
-        uses: gradle/gradle-build-action@v2
+        uses: gradle/gradle-build-action@v3
 
       - name: Run JVM tests
         run: ./gradlew jvmTest --no-daemon --stacktrace
 
       - name: Upload test results
         if: always()
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: jvm-test-results
           path: '**/build/test-results/jvmTest/*.xml'
+          if-no-files-found: ignore
 
   test-js:
     name: Test JavaScript
@@ -44,22 +55,24 @@ jobs:
         with:
           java-version: '11'
           distribution: 'temurin'
+          cache: 'gradle'
 
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
 
       - name: Setup Gradle
-        uses: gradle/gradle-build-action@v2
+        uses: gradle/gradle-build-action@v3
 
       - name: Run JS tests
         run: ./gradlew jsTest --no-daemon --stacktrace
 
       - name: Upload test results
         if: always()
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: js-test-results
           path: '**/build/test-results/jsTest/*.xml'
+          if-no-files-found: ignore
 
   test-macos:
     name: Test macOS & iOS
@@ -73,12 +86,13 @@ jobs:
         with:
           java-version: '11'
           distribution: 'temurin'
+          cache: 'gradle'
 
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
 
       - name: Setup Gradle
-        uses: gradle/gradle-build-action@v2
+        uses: gradle/gradle-build-action@v3
 
       - name: Run macOS X64 tests
         run: ./gradlew macosX64Test --no-daemon --stacktrace
@@ -88,10 +102,11 @@ jobs:
 
       - name: Upload test results
         if: always()
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: macos-test-results
           path: '**/build/test-results/**/*.xml'
+          if-no-files-found: ignore
 
   test-macos-arm:
     name: Test macOS ARM64
@@ -105,22 +120,24 @@ jobs:
         with:
           java-version: '11'
           distribution: 'temurin'
+          cache: 'gradle'
 
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
 
       - name: Setup Gradle
-        uses: gradle/gradle-build-action@v2
+        uses: gradle/gradle-build-action@v3
 
       - name: Run macOS ARM64 tests
         run: ./gradlew macosArm64Test --no-daemon --stacktrace
 
       - name: Upload test results
         if: always()
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: macos-arm-test-results
           path: '**/build/test-results/**/*.xml'
+          if-no-files-found: ignore
 
   test-linux:
     name: Test Linux
@@ -134,22 +151,24 @@ jobs:
         with:
           java-version: '11'
           distribution: 'temurin'
+          cache: 'gradle'
 
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
 
       - name: Setup Gradle
-        uses: gradle/gradle-build-action@v2
+        uses: gradle/gradle-build-action@v3
 
       - name: Run Linux X64 tests
         run: ./gradlew linuxX64Test --no-daemon --stacktrace
 
       - name: Upload test results
         if: always()
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: linux-test-results
           path: '**/build/test-results/linuxX64Test/*.xml'
+          if-no-files-found: ignore
 
   test-windows:
     name: Test Windows
@@ -163,9 +182,10 @@ jobs:
         with:
           java-version: '11'
           distribution: 'temurin'
+          cache: 'gradle'
 
       - name: Setup Gradle
-        uses: gradle/gradle-build-action@v2
+        uses: gradle/gradle-build-action@v3
 
       - name: Run Windows tests
         run: ./gradlew mingwX64Test --no-daemon --stacktrace
@@ -173,10 +193,11 @@ jobs:
 
       - name: Upload test results
         if: always()
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: windows-test-results
           path: '**/build/test-results/mingwX64Test/*.xml'
+          if-no-files-found: ignore
 
   build:
     name: Build all targets
@@ -191,23 +212,27 @@ jobs:
         with:
           java-version: '11'
           distribution: 'temurin'
+          cache: 'gradle'
 
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
 
       - name: Setup Gradle
-        uses: gradle/gradle-build-action@v2
+        uses: gradle/gradle-build-action@v3
 
       - name: Build all targets
         run: ./gradlew build --no-daemon --stacktrace
 
       - name: Upload build artifacts
-        uses: actions/upload-artifact@v3
+        if: success()
+        uses: actions/upload-artifact@v4
         with:
           name: build-artifacts
           path: |
             **/build/libs/*.jar
-            **/build/outputs/**/*
+            **/build/libs/*.klib
+          if-no-files-found: warn
+          retention-days: 7
 
   code-quality:
     name: Code Quality
@@ -221,15 +246,18 @@ jobs:
         with:
           java-version: '11'
           distribution: 'temurin'
+          cache: 'gradle'
 
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
 
       - name: Setup Gradle
-        uses: gradle/gradle-build-action@v2
+        uses: gradle/gradle-build-action@v3
 
       - name: Run detekt (if configured)
         run: ./gradlew detekt --no-daemon || true
+        continue-on-error: true
 
       - name: Check API compatibility
         run: ./gradlew apiCheck --no-daemon || true
+        continue-on-error: true
