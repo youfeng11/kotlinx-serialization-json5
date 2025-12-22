@@ -76,7 +76,7 @@ jobs:
 
   test-macos:
     name: Test macOS & iOS
-    runs-on: macos-16
+    runs-on: macos-15
     steps:
       - name: Checkout code
         uses: actions/checkout@v5
@@ -117,7 +117,7 @@ jobs:
 
   test-macos-arm:
     name: Test macOS ARM64
-    runs-on: macos-15-arm64
+    runs-on: macos-15
     steps:
       - name: Checkout code
         uses: actions/checkout@v5
