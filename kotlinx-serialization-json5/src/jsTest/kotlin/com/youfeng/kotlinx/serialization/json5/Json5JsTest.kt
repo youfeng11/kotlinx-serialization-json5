@@ -1,7 +1,3 @@
-// ============================================================================
-// jsTest/kotlin/Json5JsTest.kt - JavaScript 特定测试
-// ============================================================================
-
 package com.youfeng.kotlinx.serialization.json5
 
 import kotlinx.serialization.Serializable
