@@ -13,10 +13,6 @@ kotlin {
         namespace = "com.youfeng.kotlinx.serialization.json5"
         compileSdk = 36
         minSdk = 24
-
-        compilerOptions {
-            jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_17)
-        }
     }
 
     // JVM 平台
@@ -113,39 +109,17 @@ kotlin {
     }
 }
 
-// 配置发布
-publishing {
-    publications {
-        create<MavenPublication>("maven") {
-            groupId = project.group.toString()
-            version = project.version.toString()
-
-            pom {
-                name.set("Kotlinx Serialization JSON5")
-                description.set("JSON5 support for kotlinx.serialization")
-                url.set("https://github.com/youfeng11/kotlinx-serialization-json5")
-                
-                licenses {
-                    license {
-                        name.set("The Apache License, Version 2.0")
-                        url.set("http://www.apache.org/licenses/LICENSE-2.0.txt")
-                    }
-                }
-                
-                developers {
-                    developer {
-                        id.set("youfeng11")
-                        name.set("由风")
-                        email.set("youfeng11@outlook.com")
-                    }
-                }
-                
-                scm {
-                    connection.set("scm:git:git://github.com/youfeng/kotlinx-serialization-json5.git")
-                    developerConnection.set("scm:git:ssh://github.com/youfeng11/kotlinx-serialization-json5.git")
-                    url.set("https://github.com/youfeng11/kotlinx-serialization-json5")
-                }
-            }
+afterEvaluate {
+    // 强制配置 publishing 块，确保所有出版物都使用正确的 Group ID
+    publishing {
+        // 遍历所有由 Kotlin Multiplatform 插件自动创建的出版物
+        publications.withType<MavenPublication>().configureEach {
+            // 将出版物的 Group ID 强制设置为根项目的 Group ID
+            // 这是修复 KMP 元数据 Group ID 派生错误的常见做法
+            groupId = rootProject.group.toString() 
+            
+            // 确保版本号也使用根项目的版本号，以防万一
+            version = rootProject.version.toString() 
         }
     }
 }
