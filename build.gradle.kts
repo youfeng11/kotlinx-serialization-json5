@@ -4,11 +4,10 @@ plugins {
     alias(libs.plugins.serialization) apply false
 }
 
-allprojects {
-    group = "com.github.youfeng11"
-}
+group = "com.github.youfeng11"
 
 // 配置所有子项目
 subprojects {
     apply(plugin = "maven-publish")
+    group = "com.github.youfeng11"
 }

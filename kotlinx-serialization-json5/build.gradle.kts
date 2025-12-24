@@ -112,16 +112,3 @@ kotlin {
         }
     }
 }
-
-afterEvaluate {
-    // 强制配置 publishing 块
-    publishing {
-        // 遍历所有由 Kotlin Multiplatform 插件自动创建的出版物
-        publications.withType<MavenPublication>().configureEach {
-            // 确保 Group ID 正确 (尽管在根项目设置了，这里是双重保险)
-            groupId = rootProject.group.toString() 
-            version = rootProject.version.toString() 
-            artifactId = rootProject.name
-        }
-    }
-}
